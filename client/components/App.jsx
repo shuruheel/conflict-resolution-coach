@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import logo from "/assets/openai-logomark.svg";
-import EventLog from "./EventLog";
 import SessionControls from "./SessionControls";
-import ToolPanel from "./ToolPanel";
+import ConflictRatingsPanel from "./ConflictRatingsPanel";
 
 export default function App() {
   const [isSessionActive, setIsSessionActive] = useState(false);
@@ -131,38 +129,32 @@ export default function App() {
   }, [dataChannel]);
 
   return (
-    <>
-      <nav className="absolute top-0 left-0 right-0 h-16 flex items-center">
-        <div className="flex items-center gap-4 w-full m-4 pb-2 border-0 border-b border-solid border-gray-200">
-          <img style={{ width: "24px" }} src={logo} />
-          <h1>realtime console</h1>
+    <div className="h-screen flex flex-col">
+      <nav className="h-16 flex items-center border-b border-gray-200">
+        <div className="flex items-center gap-4 px-4">
+          <h1>Conflict Resolution Coach</h1>
         </div>
       </nav>
-      <main className="absolute top-16 left-0 right-0 bottom-0">
-        <section className="absolute top-0 left-0 right-[380px] bottom-0 flex">
-          <section className="absolute top-0 left-0 right-0 bottom-32 px-4 overflow-y-auto">
-            <EventLog events={events} />
-          </section>
-          <section className="absolute h-32 left-0 right-0 bottom-0 p-4">
-            <SessionControls
-              startSession={startSession}
-              stopSession={stopSession}
-              sendClientEvent={sendClientEvent}
-              sendTextMessage={sendTextMessage}
-              events={events}
-              isSessionActive={isSessionActive}
-            />
-          </section>
-        </section>
-        <section className="absolute top-0 w-[380px] right-0 bottom-0 p-4 pt-0 overflow-y-auto">
-          <ToolPanel
+      <main className="flex-1 flex flex-col max-w-3xl mx-auto w-full">
+        <div className="flex-1 p-6 flex flex-col items-center justify-center">
+          <h2 className="text-2xl font-semibold mb-6 text-center">Want to get better at conflict resolution?</h2>
+          <ConflictRatingsPanel
             sendClientEvent={sendClientEvent}
-            sendTextMessage={sendTextMessage}
             events={events}
             isSessionActive={isSessionActive}
           />
-        </section>
+        </div>
+        
+        <div className="h-32 p-4 border-t border-gray-200">
+          <SessionControls
+            startSession={startSession}
+            stopSession={stopSession}
+            sendClientEvent={sendClientEvent}
+            events={events}
+            isSessionActive={isSessionActive}
+          />
+        </div>
       </main>
-    </>
+    </div>
   );
 }
