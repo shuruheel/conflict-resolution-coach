@@ -1,7 +1,9 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { memo } from "react";
 
-function SummarySection({ title, items, icon }) {
+// Memoize the SummarySection component
+const SummarySection = memo(function SummarySection({ title, items, icon }) {
   if (!items?.length) return null;
   
   return (
@@ -12,17 +14,20 @@ function SummarySection({ title, items, icon }) {
       </h3>
       <ul className="list-disc list-inside space-y-2">
         {items.map((item, index) => (
-          <li key={index} className="text-gray-700">{item}</li>
+          <li key={`${title}-${index}`} className="text-gray-700">{item}</li>
         ))}
       </ul>
     </div>
   );
-}
+});
 
-export default function Summary({ isSessionActive, sendClientEvent, events }) {
-  const [summaryData, setSummaryData] = useState(null);
-  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
-  const [error, setError] = useState(null);
+// Create a custom hook to handle summary generation logic
+const useSummaryGeneration = (events, sendClientEvent) => {
+  const [state, setState] = useState({
+    summaryData: null,
+    isGenerating: false,
+    error: null
+  });
 
   const parseSessionTranscript = useCallback((events) => {
     try {
@@ -112,14 +117,13 @@ export default function Summary({ isSessionActive, sendClientEvent, events }) {
     }
   }, []);
 
-  useEffect(() => {
+  const generateSummary = useCallback(() => {
     if (!events?.length) return;
 
     const mostRecentEvent = events[0];
     
     if (mostRecentEvent?.type === "session.ended") {
-      setError(null);
-      setIsGeneratingSummary(true);
+      setState(prev => ({ ...prev, error: null, isGenerating: true }));
       
       try {
         const sessionTranscript = parseSessionTranscript(events);
@@ -156,8 +160,7 @@ ${JSON.stringify(sessionTranscript)}`
           }
         });
       } catch (error) {
-        setError('Failed to process conversation history. Please try again.');
-        setIsGeneratingSummary(false);
+        setState(prev => ({ ...prev, error: 'Failed to process conversation history. Please try again.', isGenerating: false }));
       }
     }
 
@@ -181,48 +184,99 @@ ${JSON.stringify(sessionTranscript)}`
           sections.overall_progress.length > 20; // Ensure meaningful paragraph
 
         if (isValid) {
-          setSummaryData(sections);
-          setIsGeneratingSummary(false);
-          setError(null);
+          setState(prev => ({ ...prev, summaryData: sections, isGenerating: false, error: null }));
         } else {
           throw new Error('Invalid summary format: Missing required sections');
         }
       } catch (error) {
         console.error('Summary generation error:', error);
-        setError('Failed to generate summary. Please try again.');
-        setIsGeneratingSummary(false);
+        setState(prev => ({ ...prev, error: 'Failed to generate summary. Please try again.', isGenerating: false }));
       }
     }
   }, [events, sendClientEvent, parseSessionTranscript, parseSummaryResponse]);
 
+  const resetSummary = useCallback(() => {
+    setState({
+      summaryData: null,
+      isGenerating: false,
+      error: null
+    });
+  }, []);
+
+  return {
+    ...state,
+    generateSummary,
+    resetSummary
+  };
+};
+
+// Split parsing logic into separate utility functions
+const parseUtils = {
+  sessionTranscript: (events) => {
+    // Move parseSessionTranscript here
+  },
+  summaryResponse: (summaryText) => {
+    // Move parseSummaryResponse here
+  }
+};
+
+// Memoize expensive parsing operations
+const useMemoizedParsing = (events) => {
+  return useMemo(() => parseUtils.sessionTranscript(events), [events]);
+};
+
+// Create separate components for different summary states
+const SummaryLoading = () => (
+  <Card className="w-full max-w-4xl mx-auto mt-8">
+    <CardContent className="flex justify-center items-center py-8">
+      <p className="text-gray-500">Generating session summary...</p>
+    </CardContent>
+  </Card>
+);
+
+const SummaryError = ({ message }) => (
+  <Card className="w-full max-w-4xl mx-auto mt-8">
+    <CardContent className="flex justify-center items-center py-8">
+      <p className="text-red-500">{message}</p>
+    </CardContent>
+  </Card>
+);
+
+const validateSummaryData = (sections) => {
+  const validationRules = {
+    strengths: (arr) => arr.length >= 2,
+    areas_for_improvement: (arr) => arr.length >= 2,
+    personalized_suggestions: (arr) => arr.length >= 2,
+    overall_progress: (text) => text.length > 20
+  };
+
+  const errors = [];
+  
+  Object.entries(validationRules).forEach(([key, validator]) => {
+    if (!validator(sections[key])) {
+      errors.push(`Invalid ${key} section`);
+    }
+  });
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
+
+// Main component becomes much cleaner
+export default function Summary({ isSessionActive, sendClientEvent, events }) {
+  const { summaryData, isGenerating, error, generateSummary, resetSummary } = 
+    useSummaryGeneration(events, sendClientEvent);
+
   useEffect(() => {
     if (!isSessionActive) {
-      setSummaryData(null);
-      setError(null);
-      setIsGeneratingSummary(false);
+      resetSummary();
     }
-  }, [isSessionActive]);
+  }, [isSessionActive, resetSummary]);
 
-  if (isGeneratingSummary) {
-    return (
-      <Card className="w-full max-w-4xl mx-auto mt-8">
-        <CardContent className="flex justify-center items-center py-8">
-          <p className="text-gray-500">Generating session summary...</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="w-full max-w-4xl mx-auto mt-8">
-        <CardContent className="flex justify-center items-center py-8">
-          <p className="text-red-500">{error}</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
+  if (isGenerating) return <SummaryLoading />;
+  if (error) return <SummaryError message={error} />;
   if (!summaryData) return null;
 
   return (

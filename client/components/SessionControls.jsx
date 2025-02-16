@@ -17,7 +17,6 @@ function SessionStopped({ startSession }) {
       <Button
         onClick={handleStartSession}
         className={isActivating ? "bg-gray-600" : "bg-red-600"}
-        icon={<CloudLightning height={16} />}
       >
         {isActivating ? "Starting..." : "Start"}
       </Button>
@@ -51,7 +50,7 @@ export default function SessionControls({
   isSessionActive,
 }) {
   return (
-    <div className="flex gap-4 border-t-2 border-gray-200 h-full rounded-md">
+    <div className="flex gap-4 h-full rounded-md">
       {isSessionActive ? (
         <SessionActive
           stopSession={stopSession}

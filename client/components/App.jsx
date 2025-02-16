@@ -151,7 +151,7 @@ export default function App() {
           />
         </div>
         
-        <div className="p-4 border-t border-gray-200">
+        <div className="">
           <SessionControls
             startSession={startSession}
             stopSession={stopSession}
