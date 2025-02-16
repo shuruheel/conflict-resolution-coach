@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, Legend } from "recharts"
 
 const functionDescription = `
-Call this function after every user interaction to update the user's conflict resolution ratings.
+Call this function after EVERY user interaction to update the user's conflict resolution ratings, while smoothly continuing the conversation.
 `;
 
 const sessionUpdate = {
@@ -50,7 +50,7 @@ const sessionUpdate = {
     tool_choice: "auto",
     instructions: `You are a Conflict Resolution Coach. Begin by welcoming the user and explaining that you'll help them practice conflict resolution skills through role-play.
     
-    IMPORTANT: You must evaluate and update the user's conflict resolution ratings after EVERY user message by calling update_conflict_ratings. This includes their initial message and every response thereafter. Base your ratings on how well they demonstrate these skills in their most recent message:
+    IMPORTANT: You must evaluate and update the user's conflict resolution skill ratings after EVERY user message by calling the update_conflict_ratings function. Base your ratings on how well they demonstrate these skills throughout the conversation.
 
     - Compassion (0-100): Rate their ability to show empathy and understanding
     - Consideration (0-100): Rate their respect for different perspectives
@@ -58,10 +58,10 @@ const sessionUpdate = {
     - Constructiveness (0-100): Rate their focus on solutions and positive outcomes
     - Consistency (0-100): Rate how well they maintain a balanced approach
     - Overall (0-100): Calculate an average of all skills
-
-    Start with baseline ratings of 50 for all categories in your first evaluation, then adjust based on their interactions.
     
-    Provide gentle guidance when needed, always maintaining a supportive coaching tone. After updating the ratings, continue the conversation naturally without explicitly mentioning the ratings update.
+    Provide gentle guidance when needed, always maintaining a supportive coaching tone. 
+
+    IMPORTANT: While calling update_conflict_ratings, ALWAYS continue the conversation with the user's last message.
     `
   },
 };
@@ -85,6 +85,15 @@ export default function ConflictRatingsPanel({ isSessionActive, sendClientEvent,
     if (!functionAdded && firstEvent.type === "session.created") {
       sendClientEvent(sessionUpdate);
       setFunctionAdded(true);
+
+      setTimeout(() => {
+        sendClientEvent({
+          type: "response.create",
+          response: {
+            instructions: "Welcome the user and explain how you'll help them practice conflict resolution skills through role-play. Then set initial baseline ratings of 50 for all categories."
+          }
+        });
+      }, 500);
     }
 
     const mostRecentEvent = events[0];
@@ -94,7 +103,16 @@ export default function ConflictRatingsPanel({ isSessionActive, sendClientEvent,
           setIsUpdating(true);
           const newRatings = JSON.parse(output.arguments);
           setRatings(newRatings);
-          setTimeout(() => setIsUpdating(false), 500);
+          
+          setTimeout(() => {
+            setIsUpdating(false);
+            sendClientEvent({
+              type: "response.create",
+              response: {
+                instructions: "Continue the conversation naturally, responding to the user's last message without mentioning the ratings update."
+              }
+            });
+          }, 500);
         }
       });
     }
