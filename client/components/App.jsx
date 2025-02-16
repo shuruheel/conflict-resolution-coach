@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import SessionControls from "./SessionControls";
 import ConflictRatingsPanel from "./ConflictRatingsPanel";
 import RolePlayCue from "./RolePlayCue";
-import Summary from "./Summary";
 
 export default function App() {
   const [isSessionActive, setIsSessionActive] = useState(false);
@@ -146,11 +145,6 @@ export default function App() {
             isSessionActive={isSessionActive}
           />
           <ConflictRatingsPanel
-            sendClientEvent={sendClientEvent}
-            events={events}
-            isSessionActive={isSessionActive}
-          />
-          <Summary
             sendClientEvent={sendClientEvent}
             events={events}
             isSessionActive={isSessionActive}
