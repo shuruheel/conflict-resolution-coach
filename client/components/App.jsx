@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import SessionControls from "./SessionControls";
 import ConflictRatingsPanel from "./ConflictRatingsPanel";
+import RolePlayCue from "./RolePlayCue";
 
 export default function App() {
   const [isSessionActive, setIsSessionActive] = useState(false);
@@ -129,15 +130,20 @@ export default function App() {
   }, [dataChannel]);
 
   return (
-    <div className="h-screen flex flex-col">
-      <nav className="h-16 flex items-center border-b border-gray-200">
+    <div className="h-screen flex flex-col overflow-auto">
+      <nav className="h-16 flex items-center border-b border-gray-200 sticky top-0 bg-white">
         <div className="flex items-center gap-4 px-4">
           <h1>Conflict Resolution Coach</h1>
         </div>
       </nav>
       <main className="flex-1 flex flex-col max-w-3xl mx-auto w-full">
-        <div className="flex-1 p-6 flex flex-col items-center justify-center">
+        <div className="flex-1 p-6 flex flex-col items-center">
           <h2 className="text-2xl font-semibold mb-6 text-center">Want to get better at conflict resolution?</h2>
+          <RolePlayCue
+            sendClientEvent={sendClientEvent}
+            events={events}
+            isSessionActive={isSessionActive}
+          />
           <ConflictRatingsPanel
             sendClientEvent={sendClientEvent}
             events={events}
@@ -145,7 +151,7 @@ export default function App() {
           />
         </div>
         
-        <div className="h-32 p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-gray-200">
           <SessionControls
             startSession={startSession}
             stopSession={stopSession}
