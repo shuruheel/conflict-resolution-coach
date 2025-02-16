@@ -169,8 +169,8 @@ export default function ConflictRatingsPanel({ isSessionActive, sendClientEvent,
                   <Radar
                     name="You"
                     dataKey="value"
-                    stroke="#3b82f6"
-                    fill="#3b82f6"
+                    stroke="#000"
+                    fill="#000"
                     fillOpacity={0.6}
                   />
                   <Legend />
