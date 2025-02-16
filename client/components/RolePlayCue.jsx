@@ -127,7 +127,7 @@ export default function RolePlayCue({
   return (
     <section className="h-full w-full flex flex-col gap-4">
       <div className="h-full bg-gray-50 rounded-md p-4">
-        <h2 className="text-lg font-bold">Performance Cues</h2>
+        <h2 className="text-lg font-bold">Hint</h2>
         {isSessionActive ? (
           functionCallOutput ? (
             <CueDisplay functionCallOutput={functionCallOutput} />
@@ -135,7 +135,7 @@ export default function RolePlayCue({
             <p></p>
           )
         ) : (
-          <p>You will get real-time feedback as you practice...</p>
+          <p>As you practice, you will see real-time cues here</p>
         )}
       </div>
     </section>
