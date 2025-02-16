@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 const functionDescription = `
-Call this function to display performance cues and feedback during roleplay exercises.
+Call this function to give the user performance cues and feedback throughout the conversation.
 `;
 
 const sessionUpdate = {
